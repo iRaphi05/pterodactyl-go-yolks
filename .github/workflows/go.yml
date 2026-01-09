@@ -1,5 +1,4 @@
 name: build go
-
 on:
   workflow_dispatch:
   schedule:
@@ -9,10 +8,8 @@ on:
       - main
     paths:
       - go/**
-
 permissions:
   packages: write
-
 jobs:
   push:
     name: "yolks:go_${{ matrix.tag }}"
@@ -21,7 +18,9 @@ jobs:
       fail-fast: false
       matrix:
         tag:
+          - '1.24'
           - '1.25'
+          - 'latest'
     steps:
       - uses: actions/checkout@v4
       
