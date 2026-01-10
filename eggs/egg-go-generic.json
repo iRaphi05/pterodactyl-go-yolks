@@ -4,27 +4,27 @@
         "version": "PTDL_v2",
         "update_url": null
     },
-    "exported_at": "2026-01-09T13:44:34+01:00",
+    "exported_at": "2026-01-10T09:23:35+01:00",
     "name": "Go generic",
     "author": "contact@raphi.io",
-    "description": "A golang egg that compiles a local main.go file on every start.\r\n\r\nPlace your main.go file in the server directory. The application will be recompiled on each server start.",
+    "description": "A golang egg that compiles a local main.go file on every start. Optimized for writable directories and caching.",
     "features": [],
     "docker_images": {
-		"ghcr.io\/iraphi05\/yolks:go_latest": "ghcr.io\/iraphi05\/yolks:go_latest",
-		"ghcr.io\/iraphi05\/yolks:go_1.25": "ghcr.io\/iraphi05\/yolks:go_1.25",
+        "ghcr.io\/iraphi05\/yolks:go_latest": "ghcr.io\/iraphi05\/yolks:go_latest",
+        "ghcr.io\/iraphi05\/yolks:go_1.25": "ghcr.io\/iraphi05\/yolks:go_1.25",
         "ghcr.io\/iraphi05\/yolks:go_1.24": "ghcr.io\/iraphi05\/yolks:go_1.24"
     },
     "file_denylist": [],
-    "startup": "if [ ! -f \"${GO_FILE}\" ]; then echo \"ERROR: ${GO_FILE} not found! Please upload your ${GO_FILE} file.\"; exit 1; fi; if [ ! -f \"go.mod\" ]; then echo \"Initializing go.mod...\"; go mod init ${EXECUTABLE}; fi; echo \"Running go mod tidy...\"; go mod tidy; echo \"Building ${EXECUTABLE}...\"; go build -o ${EXECUTABLE} ${GO_FILE}; echo \"Build completed! Starting application...\"; exec .\/${EXECUTABLE}",
+    "startup": "export GOPATH=\/home\/container\/.go; export GOMODCACHE=\/home\/container\/.go\/pkg\/mod; export GOCACHE=\/home\/container\/.cache\/go-build; mkdir -p $GOMODCACHE $GOCACHE; if [ ! -f \"${GO_FILE}\" ]; then echo \"ERROR: ${GO_FILE} nicht gefunden!\"; exit 1; fi; if [ ! -f \"go.mod\" ]; then echo \"Initializing go.mod...\"; go mod init ${EXECUTABLE}; fi; echo \"Running go mod tidy...\"; go mod tidy; echo \"Building ${EXECUTABLE}...\"; go build -o ${EXECUTABLE} ${GO_FILE}; echo \"Build completed!\"; exec .\/${EXECUTABLE}",
     "config": {
         "files": "{}",
-        "startup": "{\r\n    \"done\": \"Server started successfully\"\r\n}",
+        "startup": "{\r\n    \"done\": \"Build completed!\"\r\n}",
         "logs": "{}",
         "stop": "^^C"
     },
     "scripts": {
         "installation": {
-            "script": "#!\/bin\/ash\r\n\r\nset -e\r\n\r\necho \"Starting installation...\"\r\n\r\n# Create server directory\r\nif [ ! -d \/mnt\/server\/ ]; then\r\n    echo \"Creating server directory...\"\r\n    mkdir -p \/mnt\/server\/\r\nfi\r\n\r\ncd \/mnt\/server\/\r\n\r\n# Create example main.go if it doesn't exist\r\nif [ ! -f \"main.go\" ]; then\r\n    echo \"Creating example main.go file...\"\r\n    cat > main.go << 'EOF'\r\npackage main\r\n\r\nimport (\r\n    \"fmt\"\r\n    \"os\"\r\n    \"os\/signal\"\r\n    \"syscall\"\r\n)\r\n\r\nfunc main() {\r\n    \/\/ Setup signal handling\r\n    sigChan := make(chan os.Signal, 1)\r\n    signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)\r\n\r\n    fmt.Println(\"Server started successfully\")\r\n    fmt.Println(\"Replace this main.go with your own code!\")\r\n    fmt.Println(\"Waiting for stop signal...\")\r\n\r\n    \/\/ Wait for signal\r\n    sig := <-sigChan\r\n    fmt.Printf(\"Received signal: %v. Shutting down gracefully...\\n\", sig)\r\n    os.Exit(0)\r\n}\r\nEOF\r\nfi\r\n\r\necho \"Installation completed successfully!\"\r\necho \"Upload your ${GO_FILE:-main.go} file and start the server.\"\r\n\r\nexit 0",
+            "script": "#!\/bin\/ash\r\n\r\nset -e\r\necho \"Starting installation...\"\r\n\r\nif [ ! -d \/mnt\/server\/ ]; then\r\n    mkdir -p \/mnt\/server\/\r\nfi\r\n\r\ncd \/mnt\/server\/\r\n\r\nif [ ! -f \"main.go\" ]; then\r\n    echo \"Creating example main.go file...\"\r\n    cat > main.go << 'EOF'\r\npackage main\r\n\r\nimport (\r\n    \"fmt\"\r\n    \"os\"\r\n    \"os\/signal\"\r\n    \"syscall\"\r\n)\r\n\r\nfunc main() {\r\n    sigChan := make(chan os.Signal, 1)\r\n    signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)\r\n\r\n    fmt.Println(\"Server started successfully\")\r\n    fmt.Println(\"Replace this main.go with your own code!\")\r\n    \r\n    sig := <-sigChan\r\n    fmt.Printf(\"Received signal: %v. Shutting down...\\n\", sig)\r\n    os.Exit(0)\r\n}\r\nEOF\r\nfi\r\n\r\necho \"Installation completed!\"\r\nexit 0",
             "container": "alpine:latest",
             "entrypoint": "ash"
         }
